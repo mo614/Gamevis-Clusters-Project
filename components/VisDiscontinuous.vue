@@ -13,6 +13,10 @@
 	<div v-if="event" v-show="event.locations.length > 1">
 		<gv-radio-list label="Plot" :all="event.locations" :selected.sync="selectedLocation"></gv-radio-list>
 	</div>
+    
+    <div>
+		<gv-radio-list label="Team" :all="teams" :selected.sync="selectedTeam"></gv-radio-list>
+	</div>
 
 	<gv-event-filter-list v-ref:filters v-if="event" :event="event" :sessions="sessions"></gv-event-filter-list>
 </template>
@@ -66,11 +70,14 @@
 			return {
 				iconClass: 'fa-crosshairs',
 				selectedLocation: null,
+                team: null,
 				locations: [],
 				pointsBySession: [],
 				sceneObjects: [],
 				sessionMaterials: [],
-				fadeOverTime: false
+				fadeOverTime: false,
+                teams: [2,3],
+                selectedTeam: null
 			}
 		},
 		computed: {
@@ -171,9 +178,9 @@
 					mesh.visible = this.visible;
 
 					this.scene.add(mesh);
-					this.sceneObjects.push(mesh);
+					this.sceneObjects.push(mesh); 
 				}
-			},
+			}
 		},
 		events: {
 			/**
@@ -201,6 +208,10 @@
 			 * @listens visualise
 			 */
 			visualise() {
+            
+            this.$parent.$parent.team = this.selectedTeam;
+                
+            
 				let queryString = `SELECT tick, session_id, (events.locations ->> :location) AS position
           FROM events
           WHERE events.name = :event
@@ -209,6 +220,8 @@
           ${this.$refs.filters.sql()}`;
 
 				console.time(`${this.event.name} discontinuous query`);
+                
+                
 
 				return db.query(queryString, {
 						type: db.QueryTypes.SELECT,
@@ -237,7 +250,8 @@
 						this.updateScene();
 					})
 					.catch(err => this.$dispatch('error', err));
-			}
+			},
+
 		},
 		ready() {
 			this.$watch('all', this.updateAvailable.bind(this));

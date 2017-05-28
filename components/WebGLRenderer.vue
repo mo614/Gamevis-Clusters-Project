@@ -41,7 +41,9 @@
 			return {
 				canvas: null,
 				renderer: null,
-				stats: null
+				stats: null,
+                raycaster: null,
+                mouseVector: null,
 			}
 		},
 		methods: {
@@ -57,10 +59,41 @@
 
 				this.stats.begin();
 				this.$emit('render');
+                
+                this.checkMouseOverlapWithCluster();
+                
 				this.renderer.render(this.scene, this.camera);
 				this.$emit('postrender');
 				this.stats.end();
 			},
+            
+            checkMouseOverlapWithCluster() {
+                // create a Ray with origin at the mouse position
+                //   and direction into the scene (camera direction)
+                this.raycaster.setFromCamera(this.mouseVector, this.camera );
+
+                
+
+                // create an array containing all objects in the scene with which the ray intersects
+                var intersects = this.raycaster.intersectObjects(this.scene.children);
+                
+                var clusterOverlays = intersects.filter(function (item) {
+                    return item.object.name === "clusterOverlay";
+                });
+                
+                if (clusterOverlays.length > 0){
+                
+                    var time = clusterOverlays[0].object.userData['time'];
+                    var clusterNo = clusterOverlays[0].object.userData.clusterNo;
+
+                    this.$parent.showGauge(time, clusterNo);
+                
+                } else {
+                    this.$parent.hideGauge();
+                }
+                
+                
+            },
 
 			/**
 			 * Save the canvas to an image.
@@ -71,7 +104,18 @@
 			 */
 			toDataURL(type) {
 				return this.canvas.toDataURL(type);
-			}
+			},
+            mouseClick(event) {
+                this.$emit.bind(this, 'mouseClick')(event);
+            },
+            mouseMove(event) {
+                //this.$emit.bind(this, 'mouseMove')(event);
+                this.mouseVector.x = ( event.offsetX / 1024 ) * 2 - 1;
+                this.mouseVector.y = - ( event.offsetY / 1024 ) * 2 + 1;
+                
+                $('#gaugeDiv').css('left', event.offsetX - 200);
+                $('#gaugeDiv').css('top', event.offsetY +43 +25+87 - 320);
+            },
 		},
 		ready() {
 			this.canvas = this.$els.canvas;
@@ -88,6 +132,12 @@
 
 			let scene = new THREE.Scene();
 			this.scene = scene;
+            
+            let raycaster = new THREE.Raycaster();
+            this.raycaster = raycaster;
+            
+            let mouseVector = new THREE.Vector2();
+            this.mouseVector = mouseVector;
 
 			this.stats = new Stats();
 			this.stats.setMode(0); // 0: fps, 1: ms, 2: mb
@@ -100,6 +150,9 @@
 			this.$els.container.appendChild(this.stats.domElement);
 
 			window.requestAnimationFrame(this.render.bind(this));
+            
+            this.canvas.addEventListener( 'mousedown', this.mouseClick, false );
+            this.canvas.addEventListener( 'mousemove', this.mouseMove, false );
 		}
 	}
 </script>
