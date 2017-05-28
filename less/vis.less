@@ -1,0 +1,67 @@
+body {
+  -webkit-user-select: none;
+}
+
+.form-horizontal .radio, .form-horizontal .checkbox, .form-horizontal .radio-inline, .form-horizontal .checkbox-inline {
+  padding-top: 0;
+}
+
+.nav-tabs {
+  .close {
+    margin-left: 7px;
+    margin-top: -1px;
+
+    color: @link-color;
+
+    &:hover {
+      color: @link-hover-color;
+    }
+  }
+}
+
+.width--auto {
+  width: auto;
+}
+
+.width--inherit {
+  width: inherit;
+}
+
+.width--100pc {
+  width: 100%;
+}
+
+.form-group-flex {
+  display: flex;
+  align-items: center;
+
+  > * {
+    flex-grow: 1;
+    flex-shrink: 1;
+
+    &:not(:last-child) {
+      margin-right: 5px;
+    }
+  }
+}
+
+.loading-icon {
+  width: 1.6em;
+  height: 1.6em;
+  margin: -.3em;
+  border-radius: 50%;
+  display: inline-block;
+  border: solid 2px transparent;
+  border-top-color: @input-border;
+  animation: rotate 1s infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

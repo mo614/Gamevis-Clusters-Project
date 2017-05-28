@@ -1,0 +1,28 @@
+{
+  "name": "gamevis",
+  "description": "",
+  "main": "main.js",
+  "authors": [
+    "Saul Rennison <saul.rennison@gmail.com>"
+  ],
+  "license": "MIT",
+  "moduleType": [
+    "node"
+  ],
+  "homepage": "https://github.com/saul/gamevis",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.3.6",
+    "vis": "^4.14.0",
+    "color": "^2.5.0",
+    "components-font-awesome": "^4.5.0",
+    "fontawesome-iconpicker": "^1.2.0",
+    "select2": "^4.0.1"
+  }
+}
