@@ -28,26 +28,19 @@
 				<gv-event-list :all="allEvents" :selected.sync="events" :sessions="sessions" :scene="scene"></gv-event-list>
                 
                 <div class="form-group">
-                    <label class="col-sm-4">Clusters</label>
-                    <div class="btn-group col-sm-8" data-toggle="buttons">
-                      <label class="btn btn-primary">
-                        <input type="checkbox" id="chkWinners">Winners
-                      </label>
-                      <label class="btn btn-primary">
-                        <input type="checkbox" id="chkLosers">Losers
-                      </label>
-                    </div>
-                    <div class="btn-group col-sm-8" data-toggle="buttons">
-                      <label class="btn btn-primary">
-                        <input type="checkbox" id="chkAttackers" :disabled="!selectedClusterGroup">Attackers
-                      </label>
-                      <label class="btn btn-primary">
-                        <input type="checkbox" id="chkDefenders" :disabled="!selectedClusterGroup">Defenders
-                      </label>
-                    </div>
+                    <label class="col-sm-4" id="clustersLabel" style=>Clusters</label>
+                    
+                    <table>
+                        <tbody id="clusterColorTable" style="display:none">
+                            <tr>
+                                <td>Cluster</td>
+                                <td>Colour</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
-				<div class="form-group-flex">
+				<div class="form-group-flex" id="visualiseButtonDiv">
 					<button type="submit" class="btn btn-primary btn-lg btn-block" @click.prevent="visualise" :disabled="!readyToVisualise">
 						<span class="glyphicon glyphicon-eye-open"></span>
 						Visualise
@@ -144,6 +137,7 @@
             clusterPositions: [],
             clusterWinRates: [], 
             clusterShapes: [],
+            colorMap: {},
             highlightedCluster: {time: -1, index: -1},
 		},
 		data() {
@@ -225,10 +219,40 @@
 			 * @memberof module:components/VisualisationTab
 			 */
 			loadClusters() {
-                //this.clusterPositions = window.require(`./data/${this.gameLevel.game}/${this.gameLevel.level}/clusterPositions.json`);
-                this.clusterWinRates = window.require(`./data/${this.gameLevel.game}/${this.gameLevel.level}/clusterWinRates.json`);
-                this.clusterShapes = window.require(`./data/${this.gameLevel.game}/${this.gameLevel.level}/clusterShapes.json`);
+                try {
+                    this.clusterWinRates = window.require(`./data/${this.gameLevel.game}/${this.gameLevel.level}/clusterWinRates.json`);
+                    this.clusterShapes = window.require(`./data/${this.gameLevel.game}/${this.gameLevel.level}/clusterShapes.json`);
+                }
+                catch(err) {
+                    this.clusterWinRates = undefined;
+                    this.clusterShapes = undefined;
+                    console.log(err.message);
+                }
+                
+                this.setupClusterOptions();
+                this.colorMap = {}; //reset colour map
+                $('#clusterColorTable').hide(); //hide colour map table
+                $('.clusterColorRow').remove(); //remove rows of old colours
 			},
+            
+            setupClusterOptions(){
+                //remove any existing buttons
+                $('.clusterButtons').remove();
+            
+                if (this.clusterShapes) {
+                    //Get property labels
+                    labels = this.clusterShapes.labels
+                    for (var i =0; i<labels.length; i++) {
+                        $("#clustersLabel").after('<div class="btn-group col-sm-8 clusterButtons" style="clear:both" id="clusterButtonGroup' + i + '" data-toggle="buttons">');
+                        var buttonGroup = $('#clusterButtonGroup' + i);
+                        for (var j =0; j<labels[i].length; j++) {
+                            $(buttonGroup).append('<label class="btn btn-primary"><input type="checkbox" class="clusterButton" id="chkCluster' + labels[i][j] + '">' + labels[i][j] + '</label>');
+
+                        }
+                    }
+                }
+
+            },
             
             updatePopup() {
             
@@ -453,49 +477,79 @@
                     clusterOverlay = this.scene.getObjectByName("clusterOverlay");
                 }
             },
-            drawClusters() {
-                
-                this.clearClusters();
-                
-                if ($('#chkWinners').is(':checked') || $('#chkLosers').is(':checked')) {//this.selectedClusterGroup) {
-                    var time = this.getNearestTick();
-                
-                    if ($('#chkWinners').is(':checked')) {
-                    
-                        if ($('#chkAttackers').is(':checked')) {
-                            //load cluster positions
-                            var clusterShapes = this.clusterShapes['win'][2][time]; //TODO: temp get relative time from positions passed from visTab
-                            var clusterWinRates = this.clusterWinRates['win'][2][time];
-                            this.drawClusterShapes(time, clusterShapes, "lawngreen", {'win': true, 'attackers': true});
-                        }
-                        if ($('#chkDefenders').is(':checked')) {
-                            //load cluster positions
-                            var clusterShapes = this.clusterShapes['win'][3][time]; //TODO: temp get relative time from positions passed from visTab
-                            var clusterWinRates = this.clusterWinRates['win'][3][time];
-                            this.drawClusterShapes(time, clusterShapes, "yellow", {'win': true, 'attackers': false});
-                        }
+            
+            getClusterShapes(listOfAttributes, unexploredAttributes){
+                if (unexploredAttributes.length > 0 && unexploredAttributes[0].length > 0) {
+                    for (var i = 0, count = unexploredAttributes[0].length; i < count; i++){
+                        var newList = JSON.parse(JSON.stringify(listOfAttributes));
+                        var nextAttribute = unexploredAttributes[0][i];
+                        newList.push(nextAttribute);
+                        this.getClusterShapes(newList, unexploredAttributes.slice(1));
                     }
-                    if ($('#chkLosers').is(':checked')) {
-                    
-                        if ($('#chkAttackers').is(':checked')) {
-                            //load cluster positions
-                            var clusterShapes = this.clusterShapes['loss'][2][time]; //TODO: temp get relative time from positions passed from visTab
-                            var clusterWinRates = this.clusterWinRates['loss'][2][time];
-                            this.drawClusterShapes(time, clusterShapes, "orangered", {'win': false, 'attackers': true});
+                } else {
+                    if (listOfAttributes.length > 0) {
+                        var shapes = this.clusterShapes[listOfAttributes[0]];
+                        for (var j=1; j < listOfAttributes.length; j++) {
+                            shapes = shapes[listOfAttributes[j]];
                         }
-                        if ($('#chkDefenders').is(':checked')) {
-                            //load cluster positions
-                            var clusterShapes = this.clusterShapes['loss'][3][time]; //TODO: temp get relative time from positions passed from visTab
-                            var clusterWinRates = this.clusterWinRates['loss'][3][time];
-                            this.drawClusterShapes(time, clusterShapes, "blue", {'win': false, 'attackers': false});
-                        }
+                        var time = this.getNearestTick();
+                        shapes = shapes[time]; //TODO: temp get relative time from positions passed from visTab
+                        this.drawClusterShapes(time, shapes, this.getClusterColor(listOfAttributes), listOfAttributes);
                     }
                     
                 }
                 
             },
             
-            drawClusterShapes(time, clusterShapes, colorName, type){
+            getClusterColor(attributes){
+                if (!(attributes in this.colorMap)){
+                    var colors = ['red', 'green', 'yellow', 'aqua', 'purple', 'orange','pink'];
+                    this.colorMap[attributes] = colors[Object.keys(this.colorMap).length];
+                    
+                    $("#clusterColorTable").append("<tr class='clusterColorRow'><td>" + attributes + "</td><td><table style='background:" + this.colorMap[attributes] + ";height:10px;width:10px'></table></tr>");
+                    
+                    if (Object.keys(this.colorMap).length == 1) {
+                        $('#clusterColorTable').show();
+                    }
+                    
+                }
+                return this.colorMap[attributes];
+            },
+
+            
+            drawClusters() {
+                
+                this.clearClusters();
+                
+                //build up list of each hierachy of things and then loop them adding cluster shapes to canvas
+                var listOfButtons = $('.clusterButton')
+                
+                for (var i = 0; i < listOfButtons.length; i++) {
+                    if ($(listOfButtons[i]).is(':checked')){
+                    
+                    }
+                }
+                
+                var labels = this.clusterShapes['labels'];
+                var time = this.getNearestTick();
+                var clusterGroups = [];
+                
+                for (var i = 0; i < labels.length; i++) {
+                    clusterGroups.push([]);
+                    for (var j = 0; j < labels[i].length; j++) {
+                        if ($('#chkCluster' + labels[i][j]).is(':checked')){
+                            clusterGroups[i].push(labels[i][j]);
+                        }
+                        
+                    }
+                }
+                
+                this.getClusterShapes([],clusterGroups);
+                
+                
+            },
+            
+            drawClusterShapes(time, clusterShapes, colorName, attributes){
                 
                 
                 for (var i = 0;i< Object.keys(clusterShapes).length;i++) {
@@ -523,7 +577,7 @@
                     var clusterMaterial = new THREE.MeshBasicMaterial( { color: shapeColor, transparent: true, opacity: 0.5 } );
                     var clusterMesh = new THREE.Mesh( clusterGeometry, clusterMaterial );
                     clusterMesh.name = "clusterOverlay";
-                    clusterMesh.userData = {'time': time, 'clusterNo': i, 'type': type }
+                    clusterMesh.userData = {'time': time, 'clusterNo': i, 'attributes': attributes }
                     this.scene.add( clusterMesh );
                     }
             },
@@ -564,7 +618,7 @@
                     }
 
                     //import cluster data
-                    if (!this.clusters) {
+                    if (!this.clusterShapes) {
                         this.loadClusters();
                     }
 

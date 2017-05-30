@@ -60,7 +60,9 @@
 				this.stats.begin();
 				this.$emit('render');
                 
-                this.checkMouseOverlapWithCluster();
+                // Each time we render a frame we should check if mouse overlaps with current rendered clusters
+                // **Uncomment this to enable overlay of win rate**
+                //this.checkMouseOverlapWithCluster();
                 
 				this.renderer.render(this.scene, this.camera);
 				this.$emit('postrender');
@@ -68,19 +70,18 @@
 			},
             
             checkMouseOverlapWithCluster() {
-                // create a Ray with origin at the mouse position
-                //   and direction into the scene (camera direction)
+                // Create a Ray with origin at the mouse position
+                // and direction into the scene (camera direction)
                 this.raycaster.setFromCamera(this.mouseVector, this.camera );
 
-                
-
-                // create an array containing all objects in the scene with which the ray intersects
+                // Create an array containing all objects in the scene with which the ray intersects
                 var intersects = this.raycaster.intersectObjects(this.scene.children);
                 
                 var clusterOverlays = intersects.filter(function (item) {
                     return item.object.name === "clusterOverlay";
                 });
                 
+                // If the mouse is overlapping a cluster, display the gauge of this.
                 if (clusterOverlays.length > 0){
                 
                     var time = clusterOverlays[0].object.userData['time'];
@@ -109,7 +110,6 @@
                 this.$emit.bind(this, 'mouseClick')(event);
             },
             mouseMove(event) {
-                //this.$emit.bind(this, 'mouseMove')(event);
                 this.mouseVector.x = ( event.offsetX / 1024 ) * 2 - 1;
                 this.mouseVector.y = - ( event.offsetY / 1024 ) * 2 + 1;
                 

@@ -1,8 +1,8 @@
 <template>
     <div class = "btn-group" style="float:left">
-      <button type = "button" class="btn btn-default" @click="play" :disabled="!canPlay">Play</button>
-      <button type = "button" class="btn btn-default" @click="pause" :disabled="!canPause">Pause</button>
-      <button type = "button" class="btn btn-default" @click="stop" :disabled="!canStop">Stop</button>
+      <button type = "button" class="btn btn-default" @click="play" :disabled="!canPlay"><span class="glyphicon glyphicon-play"></span></button>
+      <button type = "button" class="btn btn-default" @click="pause" :disabled="!canPause"><span class="glyphicon glyphicon-pause"></span></button>
+      <button type = "button" class="btn btn-default" @click="stop" :disabled="!canStop"><span class="glyphicon glyphicon-stop"></span></button>
     </div>
     <div style="height:50px;width:200px;margin-left:250px;padding-top:10px;">
       <input type="range" id="timePeriodSlider" value="10000" min ="2000" max="20000" step ="2000" />
@@ -110,8 +110,8 @@
 			this.timeline = new vis.Timeline(this.$els.timeline, this.items, options);
 			this.timeline.setGroups(this.groups);
             this.timeline.on('timechange', function (id) { timelimeComponent.$emit.bind(timelimeComponent, 'timechange')(id, timelimeComponent.items);}) ;
-            globalTimeline = this.timeline;
             
+            //Initialise playback speed slider
             $('#timePeriodSlider').rangeslider({polyfill : false});
 		}
 	}

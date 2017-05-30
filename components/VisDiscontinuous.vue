@@ -13,10 +13,6 @@
 	<div v-if="event" v-show="event.locations.length > 1">
 		<gv-radio-list label="Plot" :all="event.locations" :selected.sync="selectedLocation"></gv-radio-list>
 	</div>
-    
-    <div>
-		<gv-radio-list label="Team" :all="teams" :selected.sync="selectedTeam"></gv-radio-list>
-	</div>
 
 	<gv-event-filter-list v-ref:filters v-if="event" :event="event" :sessions="sessions"></gv-event-filter-list>
 </template>
@@ -70,14 +66,11 @@
 			return {
 				iconClass: 'fa-crosshairs',
 				selectedLocation: null,
-                team: null,
 				locations: [],
 				pointsBySession: [],
 				sceneObjects: [],
 				sessionMaterials: [],
 				fadeOverTime: false,
-                teams: [2,3],
-                selectedTeam: null
 			}
 		},
 		computed: {
@@ -208,8 +201,6 @@
 			 * @listens visualise
 			 */
 			visualise() {
-            
-            this.$parent.$parent.team = this.selectedTeam;
                 
             
 				let queryString = `SELECT tick, session_id, (events.locations ->> :location) AS position

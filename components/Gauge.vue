@@ -7,8 +7,7 @@
 	 * Component for displaying win rates as a gauge
 	 * @module components/Gauge
 	 */
-
-    
+ 
 	const justgage = window.require('justgage');
     const eve = window.require('eve');
     const Raphael = window.require('raphael');
@@ -20,21 +19,17 @@
 		},
         
 		methods: {
-
-
 			/**
 			 * Remove all objects from the scene.
 			 * @instance
 			 * @memberof module:components/VisDiscontinuous
-			 */
+            */
+             
 			clear() {
 
 			},
             
-            
-            
             displayGauge(val) {
-                //var Raphael = window.require('raphael');
                 
                 if (val == null) {
                     $("#gauge").css('visibility','hidden');
@@ -44,7 +39,9 @@
                 }
             
                 if (!this.gauge) {
-                    //setup gauge, then refresh its value as its number doesn't display properly on inialisation for some reason
+                
+                    //Setup gauge, then refresh its value as its number doesn't display properly on inialisation
+                    
                     this.gauge = new JustGage({
                         id: "gauge",
                         value: val,
@@ -61,16 +58,7 @@
                 this.gauge.refresh(val);
 
 			},
-		},
-		/*events: {
-			
+		}
 
-		},
-		ready() {
-
-		},
-		detached() {
-			this.clear();
-		}*/
 	}
 </script>
